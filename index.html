@@ -3,51 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeraBox Ultra Player</title>
-    <link href="https://vjs.zencdn.net/8.3.0/video-js.css" rel="stylesheet" />
+    <title>TeraBox Player v3</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; }
-        .vjs-matrix.video-js { color: #00ff00; }
-        #my-video { width: 100%; max-width: 600px; margin: 20px auto; border-radius: 10px; display:none; }
-        input { width: 80%; padding: 12px; margin: 10px; border-radius: 5px; border: none; }
-        button { padding: 12px 25px; background: #e91e63; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        body { background: #121212; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
+        .card { max-width: 500px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 12px; }
+        input { width: 90%; padding: 12px; border-radius: 8px; border: none; margin-bottom: 10px; }
+        button { width: 95%; padding: 12px; background: #ff0050; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        video { width: 100%; margin-top: 20px; border-radius: 10px; display: none; }
     </style>
 </head>
 <body>
-    <h2>TeraBox Player v3</h2>
-    <input type="text" id="link" placeholder="Paste link here...">
-    <button onclick="startStream()">Stream Now</button>
-    
-    <div id="video-wrapper">
-        <video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto"></video>
+    <div class="card">
+        <h2>TeraBox Streamer</h2>
+        <input type="text" id="url" placeholder="Paste link here...">
+        <button onclick="play()">Stream Now</button>
+        <p id="status"></p>
+        <video id="player" controls></video>
     </div>
-    <p id="msg"></p>
 
-    <script src="https://vjs.zencdn.net/8.3.0/video.min.js"></script>
     <script>
-        async function startStream() {
-            const link = document.getElementById('link').value;
-            const msg = document.getElementById('msg');
-            const videoElement = document.getElementById('my-video');
-            if(!link) return;
+        async function play() {
+            const url = document.getElementById('url').value;
+            const status = document.getElementById('status');
+            const player = document.getElementById('player');
+            
+            if(!url) return;
+            status.innerHTML = "Fetching video link...";
+            player.style.display = "none";
 
-            msg.innerHTML = "Fetching secure stream...";
             try {
-                // Hum aapki banayi hui API ko call karenge jo Parrot backend use karegi
-                const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
+                const res = await fetch(`/api?url=${encodeURIComponent(url)}`);
                 const data = await res.json();
                 
                 if(data.stream_url) {
-                    msg.innerHTML = "Video Found! Loading...";
-                    videoElement.style.display = "block";
-                    const player = videojs('my-video');
-                    player.src({ type: 'video/mp4', src: data.stream_url });
+                    status.innerHTML = "Video Found! Loading...";
+                    player.src = data.stream_url;
+                    player.style.display = "block";
                     player.play();
                 } else {
-                    msg.innerHTML = "Error: Stream link not accessible.";
+                    status.innerHTML = "Error: Link could not be bypassed.";
                 }
             } catch (e) {
-                msg.innerHTML = "Server Busy. Try again.";
+                status.innerHTML = "Server error. Check your Vercel logs.";
             }
         }
     </script>
