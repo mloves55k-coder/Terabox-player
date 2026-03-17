@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
+import json
 
 app = Flask(__name__)
 CORS(app)
@@ -9,29 +10,36 @@ CORS(app)
 def extract():
     url = request.args.get('url')
     if not url:
-        return jsonify({"error": "No URL"}), 400
+        return jsonify({"error": "No URL provided"}), 400
+
+    # Parrot App ka actual API endpoint jo aapne PCAPdroid mein dekha
+    api_url = "https://tera.backend.live/api/get-info"
     
+    # Ye wo headers hain jo Parrot App bhejti hai taake block na ho
+    headers = {
+        'Host': 'tera.backend.live',
+        'User-Agent': 'okhttp/4.9.3',
+        'Content-Type': 'application/json; charset=utf-8',
+        'Accept-Encoding': 'gzip'
+    }
+
+    # Parrot App ka secret JSON payload format
+    payload = {
+        "url": url,
+        "token": "" # Baaz dafa ye empty bhi kaam karta hai
+    }
+
     try:
-        # TeraBox official app bypass link
-        api_url = f"https://www.terabox.com/share/list?shorturl={url.split('/s/')[1]}&root=1"
+        # Hum POST request bhejenge bilkul app ki tarah
+        response = requests.post(api_url, headers=headers, json=payload, timeout=15)
+        data = response.json()
         
-        headers = {
-            'User-Agent': 'TeraBox;10.5.2;Android;10;Redmi 13C',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Connection': 'keep-alive'
-        }
+        # Data extract karne ki koshish
+        if "list" in data and len(data["list"]) > 0:
+            stream_url = data["list"][0].get("main_url") or data["list"][0].get("direct_link")
+            if stream_url:
+                return jsonify({"stream_url": stream_url})
         
-        r = requests.get(api_url, headers=headers, timeout=15)
-        data = r.json()
-        
-        # Agar list mil jaye toh video link dhoondna
-        if "list" in data:
-            # Ye link generate karne ke liye humein unka download link use karna hoga
-            file_info = data["list"][0]
-            dlink = file_info.get("dlink")
-            if dlink:
-                return jsonify({"stream_url": dlink})
-        
-        return jsonify({"error": "Bypass failed, trying backup..."}), 404
-    except:
-        return jsonify({"error": "Server error"}), 500
+        return jsonify({"error": "Encryption layer 2 blocked us"}), 403
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
