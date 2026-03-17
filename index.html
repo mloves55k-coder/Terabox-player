@@ -3,44 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeraBox Player</title>
+    <title>TeraBox Premium Player</title>
     <style>
-        body { font-family: sans-serif; background: #000; color: #fff; text-align: center; margin: 0; padding: 20px; }
-        .container { max-width: 500px; margin: auto; }
-        input { width: 90%; padding: 15px; border-radius: 10px; border: none; margin-bottom: 10px; font-size: 16px; }
-        button { width: 95%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        #player { margin-top: 20px; width: 100%; border: 1px solid #333; min-height: 250px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
-        video { width: 100%; border-radius: 10px; }
+        body { font-family: sans-serif; background: #0f0f0f; color: white; text-align: center; padding: 20px; }
+        .box { max-width: 600px; margin: auto; background: #1a1a1a; padding: 25px; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        input { width: 90%; padding: 15px; border-radius: 10px; border: 1px solid #333; background: #222; color: white; margin-bottom: 15px; }
+        button { width: 95%; padding: 15px; background: #ffcc00; color: black; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        #video-frame { margin-top: 20px; width: 100%; height: 350px; border-radius: 10px; display: none; border: 1px solid #444; }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="box">
         <h2>TeraBox Player</h2>
-        <input type="text" id="link" placeholder="Paste link here...">
-        <button onclick="play()">Play Video</button>
-        <div id="player">Video will load here</div>
+        <input type="text" id="urlInput" placeholder="Paste TeraBox Link Here...">
+        <button onclick="playNow()">Stream Now</button>
+        <iframe id="video-frame" allowfullscreen></iframe>
+        <p id="status" style="margin-top:15px; color:#888;">Enter link to play</p>
     </div>
 
     <script>
-        async function play() {
-            const link = document.getElementById('link').value;
-            const player = document.getElementById('player');
-            if(!link) return alert("Link paste karein!");
+        function playNow() {
+            let url = document.getElementById('urlInput').value;
+            let frame = document.getElementById('video-frame');
+            let status = document.getElementById('status');
             
-            player.innerHTML = "Processing...";
-            try {
-                const res = await fetch(`/api?url=${encodeURIComponent(link)}`);
-                const data = await res.json();
-                const videoUrl = data.stream_url || (data.list && data.list[0] ? data.list[0].main_url : null);
-                
-                if(videoUrl) {
-                    player.innerHTML = `<video src="${videoUrl}" controls autoplay></video>`;
-                } else {
-                    player.innerHTML = "Error: Link not found.";
-                }
-            } catch (e) {
-                player.innerHTML = "Error: Connection failed.";
-            }
+            if(!url) return alert("Link toh dalein!");
+
+            // TeraBox Direct Streamer service ka istemal
+            // Ye method zyada stable hai kyunki ye direct link ko video mein badalta hai
+            let streamUrl = "https://terabox.com/sharing/embed?surl=" + url.split("/s/")[1];
+            
+            // Alternately, agar official embed kaam na kare toh bypasser:
+            // let streamUrl = "https://www.terabox.app/sharing/embed?surl=" + url.split("/s/")[1];
+
+            frame.src = streamUrl;
+            frame.style.display = "block";
+            status.innerHTML = "Trying to load video player...";
         }
     </script>
 </body>
