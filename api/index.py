@@ -11,21 +11,29 @@ def extract():
     if not url:
         return jsonify({"error": "No URL"}), 400
     
-    try:
-        # Hum aik third-party bypasser use karenge jo zyada stable hai
-        api_url = f"https://terabox-dl.qtcloud.workers.dev/api/get-info?url={url}"
-        r = requests.get(api_url, timeout=10)
-        res = r.json()
-        
-        # Check for multiple possible link locations
-        stream = ""
-        if "list" in res and res["list"]:
-            stream = res["list"][0].get("main_url") or res["list"][0].get("direct_link")
-        elif "download_link" in res:
-            stream = res["download_link"]
-
-        if stream:
-            return jsonify({"stream_url": stream})
-        return jsonify({"error": "Link not found"}), 404
-    except:
-        return jsonify({"error": "Extraction failed"}), 500
+    # List of different bypassers to try
+    endpoints = [
+        f"https://terabox-dl.qtcloud.workers.dev/api/get-info?url={url}",
+        f"https://terabox-api.p-v.workers.dev/api?url={url}"
+    ]
+    
+    for api_url in endpoints:
+        try:
+            r = requests.get(api_url, timeout=10)
+            if r.status_code == 200:
+                res = r.json()
+                # Try all possible keys for the video link
+                stream = ""
+                if "list" in res and res["list"]:
+                    stream = res["list"][0].get("main_url") or res["list"][0].get("direct_link")
+                elif "download_link" in res:
+                    stream = res["download_link"]
+                elif "url" in res:
+                    stream = res["url"]
+                
+                if stream:
+                    return jsonify({"stream_url": stream})
+        except:
+            continue
+            
+    return jsonify({"error": "Sare servers fail ho gaye. TeraBox ne ye link block kiya hai."}), 404
