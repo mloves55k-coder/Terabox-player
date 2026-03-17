@@ -12,25 +12,26 @@ def extract():
         return jsonify({"error": "No URL"}), 400
     
     try:
-        # Hum aik naya open-source bypasser use karenge jo filhal working hai
-        api_url = f"https://terabox-dl.qtcloud.workers.dev/api/get-info?url={url}"
+        # TeraBox official app bypass link
+        api_url = f"https://www.terabox.com/share/list?shorturl={url.split('/s/')[1]}&root=1"
         
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
-            'Accept': 'application/json',
-            'Referer': 'https://www.terabox.com/'
+            'User-Agent': 'TeraBox;10.5.2;Android;10;Redmi 13C',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Connection': 'keep-alive'
         }
         
         r = requests.get(api_url, headers=headers, timeout=15)
         data = r.json()
         
-        # Check for multiple possible video link keys
-        video_url = ""
-        if "list" in data and len(data["list"]) > 0:
-            video_url = data["list"][0].get("main_url") or data["list"][0].get("direct_link")
+        # Agar list mil jaye toh video link dhoondna
+        if "list" in data:
+            # Ye link generate karne ke liye humein unka download link use karna hoga
+            file_info = data["list"][0]
+            dlink = file_info.get("dlink")
+            if dlink:
+                return jsonify({"stream_url": dlink})
         
-        if video_url:
-            return jsonify({"stream_url": video_url})
-        return jsonify({"error": "Encryption mismatch"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Bypass failed, trying backup..."}), 404
+    except:
+        return jsonify({"error": "Server error"}), 500
