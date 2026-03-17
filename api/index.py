@@ -12,27 +12,28 @@ def extract():
         return jsonify({"error": "No URL"}), 400
     
     try:
-        # Parrot Downloader ka backend endpoint
-        api_url = f"https://tera.backend.live/api/get-info?url={url}"
+        # Naya stable public bypasser
+        api_url = f"https://terabox-dl.qtcloud.workers.dev/api/get-info?url={url}"
         
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36',
-            'Origin': 'https://tera.backend.live',
-            'Referer': 'https://tera.backend.live/'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
         
         r = requests.get(api_url, headers=headers, timeout=15)
-        data = r.json()
+        res = r.json()
         
-        # Link nikalne ka logic
-        stream_url = ""
-        if "list" in data and len(data["list"]) > 0:
-            stream_url = data["list"][0].get("main_url") or data["list"][0].get("direct_link")
+        # Multiple keys check karna kyunki formats badalte rehte hain
+        stream = ""
+        if "list" in res and res["list"]:
+            item = res["list"][0]
+            stream = item.get("main_url") or item.get("direct_link") or item.get("download_link")
+        elif "download_link" in res:
+            stream = res["download_link"]
+
+        if stream:
+            # Video player ko direct stream link bhejna
+            return jsonify({"stream_url": stream})
         
-        if stream_url:
-            return jsonify({"stream_url": stream_url})
-        else:
-            return jsonify({"error": "Backend ne link nahi diya"}), 404
-            
+        return jsonify({"error": "TeraBox ne encryption badal di hai"}), 404
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Server error"}), 500
