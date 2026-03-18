@@ -3,53 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeraBox Player Pro</title>
-    <style>
-        body { font-family: sans-serif; background: #0a0a0a; color: white; text-align: center; padding: 20px; }
-        .main-card { max-width: 500px; margin: auto; background: #151515; padding: 30px; border-radius: 20px; border: 1px solid #333; }
-        input { width: 90%; padding: 15px; border-radius: 10px; border: 1px solid #444; background: #000; color: #00ff00; margin-bottom: 20px; font-size: 16px; }
-        .btn-play { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 18px; }
-        .btn-play:hover { background: #0056b3; }
-        .info { margin-top: 20px; color: #888; font-size: 14px; }
-        #player-box { margin-top: 20px; display: none; }
-        iframe { width: 100%; height: 350px; border-radius: 10px; border: 2px solid #007bff; }
-    </style>
+    <title>TeraBox Player - Stream & Download</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="main-card">
-        <h2>TeraBox Streamer</h2>
-        <input type="text" id="teraUrl" placeholder="Paste TeraBox Link here...">
-        <button class="btn-play" onclick="streamNow()">Stream & Download</button>
-        
-        <div id="player-box">
-            <p style="color:#00ff00;">Streaming in progress...</p>
-            <iframe id="videoIframe" src="" allowfullscreen></iframe>
+
+    <div class="container">
+        <header>
+            <h1>TeraBox <span>Player</span></h1>
+            <p>Paste your link and enjoy ad-free streaming</p>
+        </header>
+
+        <div class="input-section">
+            <input type="text" id="teralink" placeholder="https://terabox.com/s/1xxxxxxx">
+            <button id="playBtn">Play Now</button>
         </div>
-        
-        <div class="info">
-            <p>Note: Agar video load na ho, toh link dobara check karein.</p>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Extracting direct link from server...</p>
+        </div>
+
+        <div id="player-card" class="player-card">
+            <div class="video-wrapper">
+                <video id="mainPlayer" controls poster="https://via.placeholder.com/640x360?text=TeraBox+Player"></video>
+            </div>
+            <h3 id="videoTitle">Video Filename</h3>
+            <div class="action-buttons">
+                <a id="downloadBtn" href="#" target="_blank" class="download-btn">Download Video</a>
+            </div>
         </div>
     </div>
 
-    <script>
-        function streamNow() {
-            const input = document.getElementById('teraUrl').value;
-            const box = document.getElementById('player-box');
-            const iframe = document.getElementById('videoIframe');
-            
-            if(!input) return alert("Link paste karein!");
-
-            // TeraBox Bypass logic via 3rd party engine
-            // Ye engine browser cookies use karke video extract karta hai
-            const shortId = input.split('/s/')[1];
-            const bypassUrl = `https://terabox.com/sharing/embed?surl=${shortId}`;
-
-            box.style.display = "block";
-            iframe.src = bypassUrl;
-            
-            // Scroll down automatically
-            window.scrollTo(0, document.body.scrollHeight);
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
