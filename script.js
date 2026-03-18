@@ -14,38 +14,40 @@ document.getElementById('playBtn').addEventListener('click', async function() {
     loading.style.display = "block";
     playerCard.style.display = "none";
 
-    // Koshish 1: Primary API
-    try {
-        const response = await fetch(`https://terabox-dl.qtcloud.workers.dev/api/get-info?url=${inputUrl}`);
-        const data = await response.json();
+    // Hum direct workers.dev ke bajaye ek powerful bypasser use karenge
+    const apiEndpoint = `https://terabox-dl.qtcloud.workers.dev/api/get-info?url=${inputUrl}`;
+    
+    // Proxy use kar rahe hain taake browser block na kare (CORS fix)
+    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(apiEndpoint);
 
-        if (data.list && data.list.length > 0) {
-            showVideo(data.list[0]);
-        } else {
-            // Agar pehli fail ho jaye, toh Koshish 2: Alternate API
-            const altResponse = await fetch(`https://terabox-api.herokuapp.com/api/info?url=${inputUrl}`);
-            const altData = await altResponse.json();
+    try {
+        const response = await fetch(proxyUrl);
+        const proxyData = await response.json();
+        
+        // allorigins data ko JSON mein parse karta hai
+        const data = JSON.parse(proxyData.contents);
+
+        if (data && data.list && data.list.length > 0) {
+            const videoData = data.list[0];
             
-            if(altData.direct_link) {
-                showVideo({
-                    main_url: altData.direct_link,
-                    filename: altData.file_name
-                });
-            } else {
-                throw new Error("All APIs failed");
-            }
+            // Link ko format karna
+            let finalLink = videoData.main_url;
+            
+            videoTitle.innerText = videoData.filename || "TeraBox Video";
+            video.src = finalLink;
+            downloadBtn.href = finalLink;
+
+            loading.style.display = "none";
+            playerCard.style.display = "block";
+            
+            // Auto play koshish
+            video.play().catch(() => console.log("Auto-play blocked by browser"));
+        } else {
+            throw new Error("Invalid Link");
         }
     } catch (error) {
         loading.style.display = "none";
-        alert("API Busy hai ya link expire ho gaya hai. Dobara koshish karein ya koi aur link try karein.");
-    }
-
-    function showVideo(videoData) {
-        videoTitle.innerText = videoData.filename || "TeraBox Video";
-        video.src = videoData.main_url;
-        downloadBtn.href = videoData.main_url;
-        loading.style.display = "none";
-        playerCard.style.display = "block";
-        video.play();
+        alert("Server Busy! Is link ko 2-3 baar try karein ya browser refresh karein.");
+        console.error("Error details:", error);
     }
 });
