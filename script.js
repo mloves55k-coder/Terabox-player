@@ -3,51 +3,39 @@ document.getElementById('playBtn').addEventListener('click', async function() {
     const loading = document.getElementById('loading');
     const playerCard = document.getElementById('player-card');
     const video = document.getElementById('mainPlayer');
-    const downloadBtn = document.getElementById('downloadBtn');
     const videoTitle = document.getElementById('videoTitle');
 
-    if (!inputUrl) {
-        alert("Please paste a TeraBox link!");
-        return;
-    }
+    if (!inputUrl) return alert("Please paste a link!");
 
     loading.style.display = "block";
     playerCard.style.display = "none";
 
-    // Hum direct workers.dev ke bajaye ek powerful bypasser use karenge
-    const apiEndpoint = `https://terabox-dl.qtcloud.workers.dev/api/get-info?url=${inputUrl}`;
-    
-    // Proxy use kar rahe hain taake browser block na kare (CORS fix)
-    const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(apiEndpoint);
-
     try {
-        const response = await fetch(proxyUrl);
-        const proxyData = await response.json();
+        // TeraBox link se short ID nikalna
+        const urlParts = inputUrl.split('/');
+        const shortId = urlParts[urlParts.length - 1].split('?')[0];
+
+        // Alternate Bypasser Link
+        const bypassUrl = `https://www.terabox.app/sharing/link?surl=${shortId}`;
         
-        // allorigins data ko JSON mein parse karta hai
-        const data = JSON.parse(proxyData.contents);
+        // Is link ko play karne ke liye direct stream server use karte hain
+        const directStream = `https://terabox-videoplayer.vercel.app/api/parse?url=${inputUrl}`;
 
-        if (data && data.list && data.list.length > 0) {
-            const videoData = data.list[0];
-            
-            // Link ko format karna
-            let finalLink = videoData.main_url;
-            
-            videoTitle.innerText = videoData.filename || "TeraBox Video";
-            video.src = finalLink;
-            downloadBtn.href = finalLink;
+        const response = await fetch(directStream);
+        const data = await response.json();
 
+        if (data.url) {
+            video.src = data.url;
+            videoTitle.innerText = data.title || "TeraBox Video";
             loading.style.display = "none";
             playerCard.style.display = "block";
-            
-            // Auto play koshish
-            video.play().catch(() => console.log("Auto-play blocked by browser"));
+            video.play();
         } else {
-            throw new Error("Invalid Link");
+            throw new Error("Link not found");
         }
     } catch (error) {
         loading.style.display = "none";
-        alert("Server Busy! Is link ko 2-3 baar try karein ya browser refresh karein.");
-        console.error("Error details:", error);
+        // Final Fallback: User ko manual link dena
+        alert("System busy hai. Ye link try karein: https://teraboxdl.com/");
     }
 });
