@@ -3,6 +3,7 @@ document.getElementById('playBtn').addEventListener('click', async function() {
     const loading = document.getElementById('loading');
     const playerCard = document.getElementById('player-card');
     const video = document.getElementById('mainPlayer');
+    const downloadBtn = document.getElementById('downloadBtn');
     const videoTitle = document.getElementById('videoTitle');
 
     if (!inputUrl) return alert("Please paste a link!");
@@ -11,31 +12,30 @@ document.getElementById('playBtn').addEventListener('click', async function() {
     playerCard.style.display = "none";
 
     try {
-        // TeraBox link se short ID nikalna
-        const urlParts = inputUrl.split('/');
-        const shortId = urlParts[urlParts.length - 1].split('?')[0];
-
-        // Alternate Bypasser Link
-        const bypassUrl = `https://www.terabox.app/sharing/link?surl=${shortId}`;
-        
-        // Is link ko play karne ke liye direct stream server use karte hain
-        const directStream = `https://terabox-videoplayer.vercel.app/api/parse?url=${inputUrl}`;
-
-        const response = await fetch(directStream);
+        // Stable Bypasser API
+        const response = await fetch(`https://terabox-dl.qtcloud.workers.dev/api/get-info?url=${inputUrl}`);
         const data = await response.json();
 
-        if (data.url) {
-            video.src = data.url;
-            videoTitle.innerText = data.title || "TeraBox Video";
+        if (data && data.list && data.list.length > 0) {
+            const videoData = data.list[0];
+            
+            // Hum direct link ke bajaye 'dlink' property try karenge jo zyada stable hai
+            const streamUrl = videoData.main_url || videoData.dlink;
+
+            videoTitle.innerText = videoData.filename;
+            video.src = streamUrl;
+            downloadBtn.href = streamUrl;
+
             loading.style.display = "none";
             playerCard.style.display = "block";
             video.play();
         } else {
-            throw new Error("Link not found");
+            throw new Error("API Limit Reached");
         }
     } catch (error) {
         loading.style.display = "none";
-        // Final Fallback: User ko manual link dena
-        alert("System busy hai. Ye link try karein: https://teraboxdl.com/");
+        // Agar worker fail ho jaye toh hum aik auto-redirect link de sakte hain
+        alert("Server limit full hai. Is link ko yahan try karein: https://teraboxdownloader.it/");
+        window.open(`https://teraboxdownloader.it/?url=${inputUrl}`, '_blank');
     }
 });
